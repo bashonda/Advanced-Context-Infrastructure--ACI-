@@ -2,9 +2,43 @@
 
 > **"The AI doesn't forget. The AI doesn't hallucinate about what happened. The AI maintains itself."**
 
-An open-source, battle-tested framework for building persistent context infrastructure for AI assistants. Born from **40+ production sessions** managing complex operations (org transitions, multi-stakeholder programs, incident response, cross-functional initiatives) with AI as a true partner — not a one-off chat.
+**Give any AI assistant a persistent, self-maintaining, self-auditing memory — using nothing but markdown files on your machine.** No daemon, no API keys, no cloud service, no vendor. Born from **40+ production sessions** running complex global operations with AI as a true partner, not a one-off chat.
 
-The core insight: **AI assistants are only as good as their context.** Most people treat AI like a search engine — ask a question, get an answer, start over. This framework treats AI like a colleague — one who remembers everything, maintains their own notes, flags when something seems wrong, and gets better every day.
+## 2-Minute Start
+
+```bash
+# 1. Grab the starter file
+curl -O https://raw.githubusercontent.com/bashonda/Advanced-Context-Infrastructure--ACI-/main/templates/level-1-single-file.md
+mv level-1-single-file.md my-context.md
+
+# 2. Fill in the sections (who you are, priorities, key people) — 10 minutes
+
+# 3. Every AI session, start with:
+#      "Read my-context.md before we begin."
+#    End every session with:
+#      "Update my-context.md with what changed today."
+```
+
+That's the whole loop. Your AI now remembers. Everything else in this repo — the multi-file architecture, the self-correction audits, the structural tooling — is what to add **when you feel specific pain**, and each addition tells you which pain it fixes.
+
+**Works with anything that reads files:** [Goose](https://github.com/block/goose), Claude, ChatGPT, Cursor, Windsurf, any MCP-compatible tool. Switching assistants costs nothing — the memory never lived inside the assistant.
+
+---
+
+## Why files? (vs. context-sync services and memory APIs)
+
+A category of tools now exists to make agent context portable: sync daemons, cloud context stores, session-capture APIs, memory layers. They solve portability by **centralizing raw context in infrastructure**. ACI solves it with **curated files and zero infrastructure**. The difference is not cosmetic:
+
+| | Context-sync / memory services | ACI (file-based vault) |
+|---|---|---|
+| What's stored | Raw session transcripts, auto-captured | Curated, verified knowledge |
+| Quality control | None — capture is the product | Session ritual + Tenth Man audit + structural tooling — **curation is the product** |
+| Trust required | Cloud provider, API keys, daemon uptime | None — local markdown |
+| Sensitive work | Context leaves your machine | Never leaves your machine |
+| Agent lock-in | SDK/API integration per agent | Anything that reads files |
+| Cost | Subscription/usage | Zero |
+
+The deeper issue is quality: **automatically accumulated context is unaudited context.** An agent drawing on a growing pile of raw transcripts inherits every error in the pile. An agent drawing on a curated vault inherits verified truth — because everything in it passed through a ritual before becoming "memory." Accumulation is cheap. Curation is the moat.
 
 **New in v2:** the framework's organizing principle is now explicit — **know which parts of your system are deterministic and which are probabilistic, and label them.** Content is passive; rules and agents fire against it; every rule has a tier; failures get hardened down the ladder. See [The D/P Principle](#the-dp-principle-v2) below.
 
@@ -97,6 +131,14 @@ Most AI context systems are *pull* — you ask, the AI answers. The Signal Scan 
 
 The steps of your session ritual say *what to gather*; an **output contract** says *what the human actually sees* — a required structure plus an explicit quality bar. Without one, your best-ever session is one lazy session away from regressing into raw tool dumps. Pairs with the **write-verification mandate**: the AI may never claim an external write is "done" until it reads the target back and confirms the change landed. → [`guides/output-contract.md`](guides/output-contract.md)
 
+### Multi-Agent Vault
+
+The vault is also the answer to "Agent A knows something — how does Agent B find out?" If every agent reads the same vault and writes through the same ritual, **the vault IS the sync layer** — different models, different vendors, same memory, zero infrastructure. Four coordination rules make it safe (partition write-ownership by file; one agent owns the master action list; scope specialists narrowly; same quality contract for every writer). Plus: local `git init` (no remote) as the deterministic versioning layer under your prose version footers. → [`guides/multi-agent-vault.md`](guides/multi-agent-vault.md)
+
+### Fork & Onboard (Teams)
+
+A mature vault separates into **architecture** (transferable) and **content** (personal). Forking = copy the structure, zero the content: a new team member starts from a proven skeleton on day one and supplies only what they uniquely know. Includes the hard case — onboarding someone who just absorbed a departed colleague's scope. Share the *how*, not the *what*. → [`guides/fork-and-onboard.md`](guides/fork-and-onboard.md)
+
 ---
 
 ## Performance Data (Real-World)
@@ -113,7 +155,7 @@ First run of the Vault Map audit on the mature source vault (28 files, ~200 cros
 
 ---
 
-## 13 Lessons Learned (40+ Sessions)
+## 15 Lessons Learned (40+ Sessions)
 
 1. **Documentation is load-bearing infrastructure** — not optional
 2. **If you explained it twice, write it down**
@@ -128,6 +170,8 @@ First run of the Vault Map audit on the mature source vault (28 files, ~200 cros
 11. **A single action tracker beats scattered to-dos.** When open actions live across multiple priority tables and session notes, the *feeling* of "I'm missing something" is usually correct. One canonical, session-surfaced action file fixes it.
 12. **Push beats pull for the things you'd otherwise miss.** A pull-only system only surfaces what you think to ask about. A session-start Signal Scan surfaces what you didn't know to look for — which is exactly where things fall through.
 13. **Purpose-built beats generic for visualization — because your SOT's semantics ARE the map.** We evaluated pointing Obsidian at the vault and rejected it: a generic graph only knows "files link to files," and demands its own link syntax. Your vault already encodes status heat, freshness, tiers, and *declared* relationships. A ~350-line read-only script renders all of that AND audits declared-vs-actual structure — the drift a generic tool can't even see. Never change your files to please a tool.
+14. **Files are the sync layer.** Agent portability and multi-agent memory don't require a service — any agent that reads your vault shares it. Curation (ritual + audit) is what makes shared memory *trustworthy*; accumulation alone just shares the errors around.
+15. **Version with git, narrate with footers.** Prose version footers are LLM-maintained and drift; a local git repo (no remote) under the vault gives deterministic diffs and time-travel for free. The hardening ladder applied to versioning itself.
 
 ---
 
@@ -159,7 +203,9 @@ First run of the Vault Map audit on the mature source vault (28 files, ~200 cros
 │   ├── session-ritual.md            # Start/end session protocol
 │   ├── action-tracker.md            # The canonical open-actions list
 │   ├── signal-scan.md               # Proactive message surfacing at session start
-│   └── vault-map.md                 # Purpose-built vault visualizer + structural audit
+│   ├── vault-map.md                 # Purpose-built vault visualizer + structural audit
+│   ├── multi-agent-vault.md         # One memory, many agents — files as the sync layer
+│   └── fork-and-onboard.md          # Scaling the vault to a team
 ├── tools/
 │   └── vault_map.py                 # Working visualizer/auditor (zero-dependency Python)
 ├── examples/                        # Real-world examples by persona
