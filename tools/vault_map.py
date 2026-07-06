@@ -270,6 +270,86 @@ def main():
         print(f"  {n['id']:45} 🔴×{h['p0']:<3} 🟠×{h['active']:<3} "
               f"🟡×{h['watch']:<3} 🧊×{h['seed']}")
 
+    # --- Quality-Ceiling checks (K-068) — provenance, supersession, conflicts
+
+    # 7. Provenance: material-claim lines with no source signal nearby.
+    #    Heuristic: lines carrying $ amounts, percentages, or hard dates in
+    #    ACTIVE operational files, where the line has no source marker.
+    SOURCE_PAT = re.compile(
+        r"\(.*?(?:Slack|DM|email|doc|Doc|sheet|Sheet|per |source|Session \d+"
+        r"|\d{1,2}/\d{1,2}|→|meeting|call|verified|Verified).*?\)", re.I)
+    CLAIM_PAT = re.compile(r"\$[\d,.]+[KMB]?|\d{1,3}(?:\.\d+)?%|\b\d{4,}\b FTE|\b\d+ HC\b")
+    print("\n## 7. PROVENANCE (K-068) — material claims with no visible source")
+    prov_flags = []
+    for rel in files:
+        if tier_of(rel) not in ("directs", "entities", "workstreams"):
+            continue  # operational files only — core files are synthesis layers
+        for i, line in enumerate(texts[rel].splitlines(), 1):
+            if CLAIM_PAT.search(line) and not SOURCE_PAT.search(line):
+                if line.strip().startswith(("|--", "#", ">")):
+                    continue
+                prov_flags.append((rel, i, line.strip()[:90]))
+    if prov_flags:
+        print(f"  🟡 {len(prov_flags)} unsourced material claims "
+              f"(showing up to 12 — full sweep: rerun with --all-prov)")
+        limit = None if "--all-prov" in sys.argv else 12
+        for rel, i, snip in prov_flags[:limit]:
+            print(f"     {rel}:{i}  {snip}")
+    else:
+        print("  ✅ all material claims carry a source signal")
+
+    # 8. Temporal validity: SUPERSEDED content still sitting in active files
+    print("\n## 8. TEMPORAL VALIDITY (K-068) — superseded/expired content in active files")
+    SUP_PAT = re.compile(r"SUPERSEDED|superseded[- ]by|valid[- ]until\s*:?\s*(\d{4}-\d{2}-\d{2})", re.I)
+    sup_flags = []
+    for rel in files:
+        for i, line in enumerate(texts[rel].splitlines(), 1):
+            m = SUP_PAT.search(line)
+            if not m:
+                continue
+            expired = ""
+            if m.group(1):
+                try:
+                    if datetime.strptime(m.group(1), "%Y-%m-%d") < now:
+                        expired = " ⚠️ EXPIRED"
+                except ValueError:
+                    pass
+            sup_flags.append((rel, i, line.strip()[:80] + expired))
+    if sup_flags:
+        print(f"  🟡 {len(sup_flags)} supersession/validity markers — confirm each is intentional:")
+        for rel, i, snip in sup_flags[:10]:
+            print(f"     {rel}:{i}  {snip}")
+    else:
+        print("  ✅ no supersession markers (or none lingering)")
+
+    # 9. Cross-file conflict candidates: same entity + diverging numbers.
+    #    Heuristic: for each proper-noun-ish token, collect (file, $-amount)
+    #    pairs; flag entities whose amounts diverge across files.
+    print("\n## 9. CONFLICT CANDIDATES (K-068) — same fact, different numbers across files")
+    ENT_AMT = re.compile(r"\b([A-Z][A-Za-z]{3,}(?:\s[A-Z][A-Za-z]+)?)\b[^.\n|]{0,60}?(\$[\d,.]+\s?[KMB]?|\d{1,3}(?:\.\d+)?%)")
+    entity_amounts = {}
+    for rel in files:
+        for m in ENT_AMT.finditer(texts[rel]):
+            ent, amt = m.group(1).strip(), m.group(2).replace(" ", "")
+            entity_amounts.setdefault(ent, {}).setdefault(amt, set()).add(rel)
+    conflicts = []
+    for ent, amts in entity_amounts.items():
+        if len(amts) >= 2:
+            all_files = set().union(*amts.values())
+            if len(all_files) >= 2:  # divergence spans files, not within one
+                conflicts.append((ent, amts))
+    if conflicts:
+        shown = 0
+        for ent, amts in sorted(conflicts, key=lambda c: -len(c[1])):
+            if shown >= 8:
+                print(f"     … {len(conflicts)-shown} more candidates (heuristic — expect noise)")
+                break
+            pairs = "; ".join(f"{a} ({', '.join(sorted(fs))})" for a, fs in list(amts.items())[:3])
+            print(f"  🟡 {ent}: {pairs}")
+            shown += 1
+    else:
+        print("  ✅ no cross-file numeric divergence candidates")
+
     # 6. Hub density
     print("\n## 6. HUBS — most-referenced files (bloat/consolidation signal)")
     hubs = sorted(nodes, key=lambda n: inbound[n["id"]], reverse=True)[:6]

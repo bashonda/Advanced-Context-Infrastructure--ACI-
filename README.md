@@ -40,6 +40,10 @@ A category of tools now exists to make agent context portable: sync daemons, clo
 
 The deeper issue is quality: **automatically accumulated context is unaudited context.** An agent drawing on a growing pile of raw transcripts inherits every error in the pile. An agent drawing on a curated vault inherits verified truth — because everything in it passed through a ritual before becoming "memory." Accumulation is cheap. Curation is the moat.
 
+**We scanned the whole field before making claims** — memory APIs (Letta, Zep, Mem0, cognee), sync services, governed-memory tools (Engram, Bilinc), and the other file-based approaches (Cline Memory Bank, CLAUDE.md, Basic Memory) — including where each is honestly ahead of us and what we adopted in response. → [`COMPARISON.md`](COMPARISON.md)
+
+**And one deliberate contrarian stance:** every memory product optimizes token efficiency; ACI optimizes **correctness**. Verification is a first-class spend — second-pass audits on high-stakes outputs, deterministic provenance/contradiction/staleness checks, a production defect log instead of a retrieval benchmark. → [`guides/quality-ceiling.md`](guides/quality-ceiling.md)
+
 **New in v2:** the framework's organizing principle is now explicit — **know which parts of your system are deterministic and which are probabilistic, and label them.** Content is passive; rules and agents fire against it; every rule has a tier; failures get hardened down the ladder. See [The D/P Principle](#the-dp-principle-v2) below.
 
 ---
@@ -155,7 +159,7 @@ First run of the Vault Map audit on the mature source vault (28 files, ~200 cros
 
 ---
 
-## 15 Lessons Learned (40+ Sessions)
+## 16 Lessons Learned (40+ Sessions)
 
 1. **Documentation is load-bearing infrastructure** — not optional
 2. **If you explained it twice, write it down**
@@ -172,6 +176,7 @@ First run of the Vault Map audit on the mature source vault (28 files, ~200 cros
 13. **Purpose-built beats generic for visualization — because your SOT's semantics ARE the map.** We evaluated pointing Obsidian at the vault and rejected it: a generic graph only knows "files link to files," and demands its own link syntax. Your vault already encodes status heat, freshness, tiers, and *declared* relationships. A ~350-line read-only script renders all of that AND audits declared-vs-actual structure — the drift a generic tool can't even see. Never change your files to please a tool.
 14. **Files are the sync layer.** Agent portability and multi-agent memory don't require a service — any agent that reads your vault shares it. Curation (ritual + audit) is what makes shared memory *trustworthy*; accumulation alone just shares the errors around.
 15. **Version with git, narrate with footers.** Prose version footers are LLM-maintained and drift; a local git repo (no remote) under the vault gives deterministic diffs and time-travel for free. The hardening ladder applied to versioning itself.
+16. **Optimize for correctness, not tokens.** Commercial memory layers minimize token cost because they serve platforms' economics; a personal/team vault's real cost is a wrong fact in production. Spend freely on verification: second passes, read-backs, background audits, defect logging. The most expensive token is the one that was wrong.
 
 ---
 
@@ -179,6 +184,7 @@ First run of the Vault Map audit on the mature source vault (28 files, ~200 cros
 
 ```
 ├── README.md                        # This file
+├── COMPARISON.md                    # Honest scan of the field — where ACI wins, where it doesn't
 ├── templates/                       # Ready-to-use template files
 │   ├── level-1-single-file.md       # Single-file SOT template
 │   ├── level-2-source-of-truth.md
@@ -205,7 +211,8 @@ First run of the Vault Map audit on the mature source vault (28 files, ~200 cros
 │   ├── signal-scan.md               # Proactive message surfacing at session start
 │   ├── vault-map.md                 # Purpose-built vault visualizer + structural audit
 │   ├── multi-agent-vault.md         # One memory, many agents — files as the sync layer
-│   └── fork-and-onboard.md          # Scaling the vault to a team
+│   ├── fork-and-onboard.md          # Scaling the vault to a team
+│   └── quality-ceiling.md           # Optimize for correctness, not tokens — defect log + verification spend
 ├── tools/
 │   └── vault_map.py                 # Working visualizer/auditor (zero-dependency Python)
 ├── examples/                        # Real-world examples by persona
