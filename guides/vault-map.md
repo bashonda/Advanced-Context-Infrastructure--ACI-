@@ -67,11 +67,26 @@ writes to your vault files.
 
 ## Cadence
 
-Run it at your weekly quality review. The audit output is machine-checkable —
-your AI partner can act on it directly ("2 declared-vs-actual gaps, 2 stale
-active files — fix now or queue?"). First run on a mature 28-file vault
-caught 6 declared-vs-actual gaps, 2 of which were real errors in the index
-file (a stale ownership row) — proof the audit works on day one.
+**Bookend every session with the map.** Add to your session ritual:
+
+- **Session start:** regenerate + open the map. The human sees the vault's
+  current state visually before work begins; any new audit findings feed
+  the session-start brief. Vault health becomes ambient instead of
+  something you remember to check.
+- **Session close:** after updates are written and committed, regenerate +
+  reopen. The human sees what the session *changed* — new nodes, closed
+  gaps, staleness movement — as a visual diff. One line of narration from
+  the AI ("added 1 workstream file, closed 2 declared-vs-actual gaps") is
+  enough. Pairs naturally with a local git commit at close: git holds the
+  textual diff, the map shows the structural one.
+
+**Plus the weekly deep pass:** run the full audit (including the provenance
+/ temporal / conflict sections) at your weekly quality review and triage
+findings. The audit output is machine-checkable — your AI partner can act
+on it directly ("2 declared-vs-actual gaps, 2 stale active files — fix now
+or queue?"). First run on a mature 28-file vault caught 6 declared-vs-actual
+gaps, 2 of which were real errors in the index file (a stale ownership row)
+— proof the audit works on day one.
 
 ## Setup
 

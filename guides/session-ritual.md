@@ -23,6 +23,16 @@ This gives the AI full context before any work begins.
 
 ---
 
+### Step 1b: Publish the Vault Map (if you use the tooling)
+
+Regenerate and open the local vault map (`python3 tools/vault_map.py`) so
+the human *sees* the vault's current state — structure, heat, staleness —
+before work begins. New audit findings feed the Tenth Man step below.
+Vault health becomes ambient instead of pull-only. (Local file only —
+never deploy the map; it renders your vault's content.)
+
+---
+
 ### Step 2: Run Tenth Man Audit
 
 Before diving into work, run a quick audit (see `tenth-man.md` for full protocol):
@@ -158,6 +168,18 @@ Run the audit again, focused on today's session:
 - **Honest findings:** Are we representing today's outcomes accurately (including setbacks)?
 
 This is lighter than the start-of-session audit. It's focused on: "Did we capture everything from today?"
+
+---
+
+### Step 5b: Commit + Republish the Vault Map (if you use the tooling)
+
+After updates are written: `git add -A && git commit -m "Session N — summary"`
+(local repo, no remote), then regenerate and reopen the vault map. The human
+sees what the session *changed* as a visual diff — new nodes, closed gaps,
+staleness movement. One line of narration is enough: "added 1 workstream
+file, closed 2 declared-vs-actual gaps." Git holds the textual diff; the
+map shows the structural one. Bookending every session this way makes the
+vault's evolution visible instead of abstract.
 
 ---
 
