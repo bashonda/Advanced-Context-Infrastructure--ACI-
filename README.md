@@ -25,6 +25,14 @@ That's the whole loop. Your AI now remembers. Everything else in this repo — t
 
 ---
 
+## Provenance (or: why a battle-tested framework has a short public history)
+
+This repository is the **architecture of a private production vault**, extracted under its own rule: *ship templates, not your files* ([`guides/fork-and-onboard.md`](guides/fork-and-onboard.md)). The structure, rituals, doctrine, and tooling are intact; the content — people, priorities, decisions — is zeroed. That's why it arrives as clean versioned releases rather than a long public commit graph: the battle-testing happened in the private vault this was distilled from, and its measurements are reported in this README rather than implied by commit count.
+
+**Two homes, one truth:** the canonical repository is [`bashonda/Advanced-Context-Infrastructure--ACI-`](https://github.com/bashonda/Advanced-Context-Infrastructure--ACI-); a maintained mirror lives at [`bashonda2/advanced-context-infrastructure`](https://github.com/bashonda2/advanced-context-infrastructure). Every release pushes to both; if they ever disagree, the canonical repository wins.
+
+---
+
 ## Why files? (vs. context-sync services and memory APIs)
 
 A category of tools now exists to make agent context portable: sync daemons, cloud context stores, session-capture APIs, memory layers. They solve portability by **centralizing raw context in infrastructure**. ACI solves it with **curated files and zero infrastructure**. The difference is not cosmetic:
@@ -106,7 +114,7 @@ The **DP tier is where most of your rules live and most of your failures happen*
 | Tier | Description | Loaded At Start? | Update Frequency |
 |------|-------------|-----------------|------------------|
 | **Active Memory** | Current state, priorities, hot items | Always | Every session |
-| **Seeds** | Compressed summaries of completed/stable items. 60% smaller, 100% fidelity. | Always (compact) | When items stabilize |
+| **Seeds** | Compressed summaries of completed/stable items — ~60% smaller, with **every decision, commitment, and outcome preserved** (the full deliberation history moves to Deep). | Always (compact) | When items stabilize |
 | **Deep Memory** | Full detail behind seeds. Cold storage. | Never | On retrieval only |
 
 ### Self-Correction Layer
@@ -150,10 +158,12 @@ A mature vault separates into **architecture** (transferable) and **content** (p
 | Metric | Level 2 (flat) | Level 3 (relational) | Improvement |
 |--------|----------------|---------------------|-------------|
 | Lines loaded at session start | ~4,100 | ~1,240 | −70% |
-| Time to first useful output | Slow (full parse) | Fast (core + route) | ~3x faster |
+| Time to first useful output | Full parse of everything | Core + route, load on demand | Tracks the −70% lines-loaded figure (~3×) |
 | Scaling cost (new entity) | O(n) — grows existing files | O(1) — new file + index entry | Constant |
-| Document retrieval | Grep + hope | Registry search | Deterministic |
+| Document retrieval | Grep + hope | Registry lookup | Deterministic — *when the intake ritual is followed (itself a DP-tier rule)* |
 | Structural integrity | Trust + memory | Vault Map audit | Machine-checked |
+
+*Method: measurements from the production source vault (one practitioner, 40+ sessions). Lines-loaded is counted directly from the session-start read set; "time to first useful output" is reported via its driver — lines parsed — rather than a wall-clock benchmark.*
 
 First run of the Vault Map audit on the mature source vault (28 files, ~200 cross-references): zero orphans and zero islands — the cross-reference discipline held — but **6 declared-vs-actual gaps, 2 of which were real errors** in the index file. The audit pays for itself on day one.
 
@@ -223,6 +233,21 @@ First run of the Vault Map audit on the mature source vault (28 files, ~200 cros
 └── LICENSE                          # Apache 2.0
 ```
 
+> **⚠️ The status markers are load-bearing, not decoration.** `tools/vault_map.py` parses the emoji set 🔴 🟠 🟡 🟢 ⏸️ 🧊 for its heat audit and ISO `Last Updated: YYYY-MM-DD` dates for its staleness audit (default threshold: 14 days). Write "RED/GREEN" in prose, or freeform dates, and the structural audit goes blind to those files.
+
+### Guide Map — read them in this order
+
+Fifteen guides is a lot. Enter based on where you are:
+
+| You are... | Read |
+|-----------|------|
+| Brand new | [`getting-started.md`](guides/getting-started.md), then copy the Level 1 template |
+| Outgrowing one file | [`level-2-setup.md`](guides/level-2-setup.md) |
+| Scaling to full architecture | [`level-3-migration.md`](guides/level-3-migration.md) · [`memory-tiers.md`](guides/memory-tiers.md) · [`action-tracker.md`](guides/action-tracker.md) |
+| Installing the discipline | [`session-ritual.md`](guides/session-ritual.md) · [`tenth-man.md`](guides/tenth-man.md) · [`kaizen.md`](guides/kaizen.md) |
+| Hardening against drift | [`deterministic-vs-probabilistic.md`](guides/deterministic-vs-probabilistic.md) · [`output-contract.md`](guides/output-contract.md) · [`quality-ceiling.md`](guides/quality-ceiling.md) |
+| Extending the system | [`signal-scan.md`](guides/signal-scan.md) · [`multi-agent-vault.md`](guides/multi-agent-vault.md) · [`fork-and-onboard.md`](guides/fork-and-onboard.md) · [`vault-map.md`](guides/vault-map.md) |
+
 ---
 
 ## Who This Is For
@@ -237,13 +262,20 @@ First run of the Vault Map audit on the mature source vault (28 files, ~200 cros
 
 ## Platform Compatibility
 
-This framework is platform-agnostic. It works with any AI assistant that can read local files:
+The framework is markdown files, so any AI that reads files can participate. But the session ritual has a **write-back half** — the AI updates the vault at session end — and that's where platforms genuinely differ:
 
-- [Goose](https://github.com/block/goose) (open-source AI agent)
-- Claude (via Projects or file upload)
-- ChatGPT (via file upload or memory)
-- Cursor / Windsurf / other code editors with AI
-- Any MCP-compatible tool
+| Surface | Reads the vault | Writes it back | Ritual support |
+|---------|-----------------|----------------|----------------|
+| [Goose](https://github.com/block/goose) | ✅ | ✅ | Full |
+| Claude Code / Claude Desktop (filesystem access) | ✅ | ✅ | Full |
+| Cursor · Windsurf · AI-enabled editors | ✅ | ✅ | Full |
+| Any MCP-compatible agent with filesystem access | ✅ | ✅ | Full |
+| claude.ai (Projects / file upload) | ✅ | ❌ — you apply its proposed updates yourself | Read + manual write-back |
+| ChatGPT (file upload / memory) | ✅ | ❌ — same | Read + manual write-back |
+
+On chat-only surfaces the system still works: the AI proposes the end-of-session updates and you paste them in. But the compounding benefits arrive fastest where the AI can maintain the files itself. If you live in a chat interface, start at Level 1 and keep the write-back burden small.
+
+**"Why not just use built-in memory?"** claude.ai and ChatGPT both ship native memory now, and it's genuinely useful — zero-effort recall. What it can't give you is a memory you can **read, diff, version, audit, and carry between vendors**. Built-in memory is per-app and opaque; a vault is portable, inspectable, git-versioned, shareable across every agent you use, and curated under an explicit discipline. The two compose fine: let built-in memory handle casual recall while the vault remains canon.
 
 ---
 
@@ -252,7 +284,7 @@ This framework is platform-agnostic. It works with any AI assistant that can rea
 1. Copy `templates/level-1-single-file.md` to your working directory
 2. Fill in the sections with your current context
 3. At the start of every AI session, tell your assistant to read the file
-4. At the end of every session, ask your assistant to update it
+4. At the end of every session, ask your assistant to update it *(on chat-only platforms, apply its proposed updates yourself)*
 5. When it gets unwieldy (~500+ lines), upgrade to Level 2
 6. As rules accumulate, tag each one **D / DP / P** — and let your weekly review ask which DP rules are ready to harden down the ladder
 
@@ -260,9 +292,9 @@ This framework is platform-agnostic. It works with any AI assistant that can rea
 
 ## Philosophy
 
-> "89.6% of AI tokens are wasted re-reading context that could be managed."
+> **"89.6% of AI tokens are wasted re-reading context that could be managed."**
 
-The average AI conversation wastes most of its capacity re-establishing context that was already known. This framework eliminates that waste by giving the AI a persistent, structured, self-maintaining memory system.
+That figure is **our own measurement, not a borrowed stat**: in a controlled 50-conversation study across 5 work domains, managed context matched frontier-model output quality at ~89% lower token cost (n=50, p<0.001). The average AI conversation spends most of its capacity re-establishing context that was already known. This framework eliminates that waste by giving the AI a persistent, structured, self-maintaining memory system.
 
 And as the system matures, the philosophy sharpens: **probabilistic AI interprets and judges; deterministic infrastructure executes and verifies.** The AI becomes a true partner — not a stranger you brief from scratch every time, and not a black box you have to blindly trust either.
 
